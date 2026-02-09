@@ -1,0 +1,42 @@
+# Node
+node_modules/
+
+# Vite
+/dist/
+
+# Tauri
+/src-tauri/target/
+/src-tauri/gen/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Local DB
+*.db
+
+# Temp
+.tmp/
+*.tmp
+
+# Build artifacts
+*.dmg
+*.msi
+*.exe
+*.AppImage
+*.deb
+
+# Environment
+.env
+.env.*
+
+# Cache
+.eslintcache
