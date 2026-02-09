@@ -11,7 +11,7 @@ import { bpmAfterPitch, pitchToMatchBpm, roundedSemitoneShift } from "./engine/p
 import { formatKey, formatKeyDisplay, parseKey, shiftKey, type KeyDisplayFormat } from "./engine/key";
 import { getTracks, initDb, insertTrack, replaceTracks, updateTrack } from "./db/tauriDb";
 import { parseTracksFromFile } from "./utils/trackImport";
-import pitchCraftLogo from "./assets/pitchcraft.png";
+const pitchCraftLogo = new URL("./assets/pitchcraft.png", import.meta.url).href;
 
 const App = () => {
   const [tracks, setTracks] = useState(sampleTracks);
