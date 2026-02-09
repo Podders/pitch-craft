@@ -42,7 +42,17 @@ const TrackSelector = ({ tracks, selectedId, onChange }: TrackSelectorProps) => 
   return (
     <div className="space-y-2">
       <label className="text-sm uppercase tracking-[0.2em] text-slate-400">Current track</label>
-      <Combobox value={selectedTrack} onChange={(track: Track) => onChange(track.id)} nullable>
+      <Combobox
+        value={selectedTrack}
+        onChange={(track: Track | null) => {
+          if (track) {
+            onChange(track.id);
+          } else {
+            onChange("");
+          }
+        }}
+        nullable
+      >
         <div className="relative">
           <Combobox.Input
             className="w-full rounded-lg border border-night-600 bg-night-700 px-4 py-3 text-slate-100 shadow-glow focus:outline-none focus:ring-2 focus:ring-neon-500"
