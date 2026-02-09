@@ -8,7 +8,7 @@ import { sampleTracks } from "./data/sampleTracks";
 import { findCompatibleTracks } from "./engine/compatibility";
 import { bpmAfterPitch, roundedSemitoneShift } from "./engine/pitch";
 import { formatKey, formatKeyDisplay, parseKey, shiftKey, type KeyDisplayFormat } from "./engine/key";
-import { getTracks, initDb, insertTrack, insertTracks, replaceTracks, updateTrack } from "./db/tauriDb";
+import { getTracks, initDb, insertTrack, replaceTracks, updateTrack } from "./db/tauriDb";
 import { parseTracksFromFile } from "./utils/trackImport";
 
 const App = () => {
@@ -33,8 +33,6 @@ const App = () => {
         await initDb();
         const storedTracks = await getTracks();
         if (storedTracks.length === 0) {
-          await insertTracks(sampleTracks);
-          setTracks(sampleTracks);
           setSelectedId("");
         } else {
           setTracks(storedTracks);
@@ -345,6 +343,10 @@ const App = () => {
                   onUpdate={handleTrackUpdate}
                   onAdd={handleAddTrack}
                   onImportClick={() => fileInputRef.current?.click()}
+                  onUseTrack={(track) => {
+                    setSelectedId(track.id);
+                    setActiveTab("mix");
+                  }}
                 />
               </div>
             )}

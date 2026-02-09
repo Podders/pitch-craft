@@ -13,11 +13,12 @@ type LibraryManagerProps = {
   onUpdate: (track: Track) => Promise<void>;
   onAdd: (track: Track) => Promise<void>;
   onImportClick: () => void;
+  onUseTrack: (track: Track) => void;
 };
 
 type DraftTrack = Track;
 
-const LibraryManager = ({ tracks, keyFormat, onUpdate, onAdd, onImportClick }: LibraryManagerProps) => {
+const LibraryManager = ({ tracks, keyFormat, onUpdate, onAdd, onImportClick, onUseTrack }: LibraryManagerProps) => {
   const [status, setStatus] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [modalState, setModalState] = useState<{
@@ -162,13 +163,22 @@ const LibraryManager = ({ tracks, keyFormat, onUpdate, onAdd, onImportClick }: L
         cell: (info) => {
           const row = info.row.original;
           return (
-            <button
-              type="button"
-              onClick={() => openEditModal(row)}
-              className="rounded-full border border-night-600 px-3 py-1 text-xs uppercase tracking-[0.2em] text-slate-300"
-            >
-              Edit
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => onUseTrack(row)}
+                className="rounded-full border border-neon-500/60 px-3 py-1 text-xs uppercase tracking-[0.2em] text-neon-400"
+              >
+                Use
+              </button>
+              <button
+                type="button"
+                onClick={() => openEditModal(row)}
+                className="rounded-full border border-night-600 px-3 py-1 text-xs uppercase tracking-[0.2em] text-slate-300"
+              >
+                Edit
+              </button>
+            </div>
           );
         }
       }
