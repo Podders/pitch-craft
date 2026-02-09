@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import PitchSlider from "./components/PitchSlider";
 import ResultsTable from "./components/ResultsTable";
 import TrackSelector from "./components/TrackSelector";
@@ -158,8 +159,50 @@ const App = () => {
   };
 
   return (
-    <div className="h-screen px-6 py-6 text-slate-100 flex flex-col">
-      <header className="mx-auto mb-6 flex w-full max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="h-screen px-6 pb-6 text-slate-100 flex flex-col">
+      <div
+        className="-mx-6 flex h-10 w-[calc(100%+3rem)] items-center justify-end border-b border-night-600 bg-night-800/70 px-3"
+        data-tauri-drag-region
+        onMouseDown={(event) => {
+          if (event.button === 0) {
+            void getCurrentWindow().startDragging();
+          }
+        }}
+      >
+        <div className="flex items-center gap-2" data-tauri-drag-region={false} onMouseDown={(event) => event.stopPropagation()}>
+          <button
+            type="button"
+            onClick={() => {
+              void getCurrentWindow().minimize();
+            }}
+            className="h-7 w-7 rounded-md border border-night-600 text-sm text-slate-400 hover:border-neon-500 hover:text-neon-400"
+            aria-label="Minimize window"
+          >
+            –
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              void getCurrentWindow().toggleMaximize();
+            }}
+            className="h-7 w-7 rounded-md border border-night-600 text-xs text-slate-400 hover:border-neon-500 hover:text-neon-400"
+            aria-label="Maximize window"
+          >
+            ☐
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              void getCurrentWindow().close();
+            }}
+            className="h-7 w-7 rounded-md border border-ember-400/70 text-sm text-ember-400 hover:border-ember-400 hover:text-ember-300"
+            aria-label="Close window"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      <header className="mx-auto mb-6 mt-6 flex w-full max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
             <img src={pitchCraftLogo} alt="PitchCraft" className="h-20 w-120 rounded-lg" />
