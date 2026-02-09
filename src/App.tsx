@@ -6,10 +6,11 @@ import TrackSelector from "./components/TrackSelector";
 import LibraryManager from "./components/LibraryManager";
 import { sampleTracks } from "./data/sampleTracks";
 import { findCompatibleTracks } from "./engine/compatibility";
-import { bpmAfterPitch, roundedSemitoneShift } from "./engine/pitch";
+import { bpmAfterPitch, pitchToMatchBpm, roundedSemitoneShift } from "./engine/pitch";
 import { formatKey, formatKeyDisplay, parseKey, shiftKey, type KeyDisplayFormat } from "./engine/key";
 import { getTracks, initDb, insertTrack, replaceTracks, updateTrack } from "./db/tauriDb";
 import { parseTracksFromFile } from "./utils/trackImport";
+import pitchCraftLogo from "./assets/pitchcraft.png";
 
 const App = () => {
   const [tracks, setTracks] = useState(sampleTracks);
@@ -24,6 +25,8 @@ const App = () => {
   const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState<{ processed: number; total: number } | null>(null);
+  const [isEditingBpm, setIsEditingBpm] = useState(false);
+  const [bpmInput, setBpmInput] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<"mix" | "library">("mix");
 
@@ -78,6 +81,22 @@ const App = () => {
     return formatKey(shifted);
   }, [currentTrack, pitchPercent]);
   const currentKeyDisplay = formatKeyDisplay(currentKey, keyFormat);
+
+  const applyManualBpm = () => {
+    if (!currentTrack) {
+      setIsEditingBpm(false);
+      return;
+    }
+    const desiredBpm = Number.parseFloat(bpmInput);
+    if (!Number.isFinite(desiredBpm) || desiredBpm <= 0) {
+      setIsEditingBpm(false);
+      return;
+    }
+    const desiredPitch = pitchToMatchBpm(currentTrack.bpm, desiredBpm);
+    const clampedPitch = Math.max(-pitchRange, Math.min(pitchRange, desiredPitch));
+    setPitchPercent(clampedPitch);
+    setIsEditingBpm(false);
+  };
 
   const results = useMemo(() => {
     if (!currentTrack) {
@@ -139,12 +158,17 @@ const App = () => {
   };
 
   return (
-    <div className="h-screen px-4 py-10 text-slate-100 flex flex-col">
+    <div className="h-screen px-6 py-6 text-slate-100 flex flex-col">
       <header className="mx-auto mb-6 flex w-full max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
-          <div>
-            <p className="text-[0.6rem] uppercase tracking-[0.3em] text-neon-500">Vinyl harmonic mixing</p>
-            <h1 className="font-display text-3xl tracking-wide md:text-4xl">PitchCraft</h1>
+          <div className="flex items-center gap-3">
+            <img src={pitchCraftLogo} alt="PitchCraft" className="h-20 w-120 rounded-lg" />
+            <div>
+              <h1 className="font-display text-3xl tracking-wide md:text-4xl">PitchCraft</h1>
+              <p className="mt-1 text-[0.6rem] uppercase tracking-[0.3em] text-neon-500">
+                Vinyl harmonic mixing
+              </p>
+            </div>
           </div>
           <div className="hidden h-10 w-px bg-night-600 md:block" />
           <div className="hidden text-sm text-slate-400 md:block">
@@ -152,24 +176,7 @@ const App = () => {
             <div>discover harmonically compatible tracks.</div>
           </div>
         </div>
-        <div className="w-full lg:w-1/2 rounded-2xl border border-night-600 bg-night-800/70 px-5 py-4 shadow-lg">
-          <div className="flex flex-wrap items-center gap-3 text-xs uppercase tracking-[0.2em] text-slate-500">
-            <span>Now playing</span>
-            <span className="truncate-cell text-slate-400">
-              {currentTrack ? `${currentTrack.title} - ${currentTrack.artist}` : "No track selected"}
-            </span>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center gap-6 text-sm text-slate-300">
-            <div>
-              <span className="text-slate-500">BPM</span>
-              <div className="text-neon-400">{currentBpm.toFixed(2)}</div>
-            </div>
-            <div>
-              <span className="text-slate-500">Key</span>
-              <div className="text-ember-400">{currentKeyDisplay}</div>
-            </div>
-          </div>
-        </div>
+        <div className="hidden lg:block" />
       </header>
 
       <main className="mx-auto flex w-full max-w-7xl flex-1 min-h-0 flex-col gap-6">
@@ -265,6 +272,52 @@ const App = () => {
                 <section className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
                   <div className="rounded-2xl border border-night-600 bg-night-800/70 p-6 shadow-lg">
                     <TrackSelector tracks={tracks} selectedId={selectedId} onChange={setSelectedId} />
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                      <div className="rounded-xl border border-night-600 bg-night-700/60 px-4 py-3">
+                        <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Current BPM</div>
+                        <div className="mt-2 text-3xl font-semibold text-neon-400">
+                          {currentTrack ? (
+                            isEditingBpm ? (
+                              <input
+                                value={bpmInput}
+                                onChange={(event) => setBpmInput(event.target.value)}
+                                onBlur={applyManualBpm}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") {
+                                    applyManualBpm();
+                                  }
+                                  if (event.key === "Escape") {
+                                    setIsEditingBpm(false);
+                                  }
+                                }}
+                                autoFocus
+                                inputMode="decimal"
+                                className="w-full bg-transparent text-3xl font-semibold text-neon-400 outline-none"
+                              />
+                            ) : (
+                              <button
+                                type="button"
+                                onDoubleClick={() => {
+                                  setBpmInput(currentBpm.toFixed(2));
+                                  setIsEditingBpm(true);
+                                }}
+                                className="text-left"
+                              >
+                                {currentBpm.toFixed(2)}
+                              </button>
+                            )
+                          ) : (
+                            "--"
+                          )}
+                        </div>
+                      </div>
+                      <div className="rounded-xl border border-night-600 bg-night-700/60 px-4 py-3">
+                        <div className="text-xs uppercase tracking-[0.2em] text-slate-500">Current Key</div>
+                        <div className="mt-2 text-3xl font-semibold text-ember-400">
+                          {currentTrack ? currentKeyDisplay : "--"}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <div className="rounded-2xl border border-night-600 bg-night-800/70 p-6 shadow-lg">
                     <div className="flex items-center justify-between pb-4 text-xs uppercase tracking-[0.2em] text-slate-500">
